@@ -14,10 +14,10 @@ import java.util.Optional;
 
 public class UserDAOImpl implements UserDAO {
 
-    private static final String SAVE_USER_SQl = "INSERT INTO users (name, email, country) VALUES(?, ?, ?);";
+    private static final String SAVE_USER_SQl = "INSERT INTO users (name, email) VALUES(?, ?);";
     private static final String FIND_USER_BY_ID_SQl = "SELECT * FROM users WHERE id = ?;";
     private static final String FIND_ALL_USERS_SQl = "SELECT * FROM users;";
-    private static final String UPDATE_USER_BY_ID_SQl = "UPDATE users SET name = ?, email = ?, country= ? WHERE id = ?;";
+    private static final String UPDATE_USER_BY_ID_SQl = "UPDATE users SET name = ?, email = ? WHERE id = ?;";
     private static final String DELETE_USER_BY_ID_SQl = "DELETE FROM users WHERE id = ?;";
 
     @Override
@@ -25,7 +25,6 @@ public class UserDAOImpl implements UserDAO {
         try (Connection connection = DBConnection.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(SAVE_USER_SQl)) {
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getEmail());
-            preparedStatement.setString(3, user.getCountry());
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new DBConnectionException("Connection problems");
@@ -43,7 +42,6 @@ public class UserDAOImpl implements UserDAO {
                 user.setId(userId);
                 user.setUsername(resultSet.getString("name"));
                 user.setEmail(resultSet.getString("email"));
-                user.setCountry(resultSet.getString("country"));
             }
         } catch (SQLException e) {
             throw new DBConnectionException("Connection problems");
@@ -61,7 +59,6 @@ public class UserDAOImpl implements UserDAO {
                 user.setId(resultSet.getLong("id"));
                 user.setUsername(resultSet.getString("name"));
                 user.setEmail(resultSet.getString("email"));
-                user.setCountry(resultSet.getString("country"));
                 users.add(user);
             }
         } catch (SQLException e) {
@@ -76,7 +73,6 @@ public class UserDAOImpl implements UserDAO {
         try (Connection connection = DBConnection.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_USER_BY_ID_SQl)) {
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getEmail());
-            preparedStatement.setString(3, user.getCountry());
             preparedStatement.setLong(4, userId);
             isUpdated = preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {

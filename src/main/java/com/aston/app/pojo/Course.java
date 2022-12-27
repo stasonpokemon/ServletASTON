@@ -7,11 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
-
+public class Course {
 
     private Long id;
-    private String username;
-    private String email;
-
+    private String name;
+    private Double price;
+    private Short months_duration;
 }
