@@ -1,21 +1,20 @@
 package com.aston.app.service;
 
-import com.aston.app.pojo.User;
-
-import java.util.List;
-import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public interface UserService {
 
-    void saveUser(User user);
 
-    Optional<User> findUserById(Long userId);
+    void findUserById(HttpServletResponse resp, String uri);
 
-    List<User> findAllUsers();
+    void findAllUsers(HttpServletResponse resp);
 
-    boolean updateUser(Long userId, User user);
+    void saveUser(HttpServletRequest req, HttpServletResponse resp);
 
-    boolean deleteUser(Long userId);
+    void updateUser(HttpServletRequest req, HttpServletResponse resp);
+
+    void deleteUser(HttpServletRequest req, HttpServletResponse resp);
 
 
 }

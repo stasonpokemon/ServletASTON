@@ -23,7 +23,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public void saveUser(User user) throws DBConnectionException {
         try (Connection connection = DBConnection.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(SAVE_USER_SQl)) {
-            preparedStatement.setString(1, user.getName());
+            preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getEmail());
             preparedStatement.setString(3, user.getCountry());
             preparedStatement.executeUpdate();
@@ -41,7 +41,7 @@ public class UserDAOImpl implements UserDAO {
             while (resultSet.next()) {
                 user = new User();
                 user.setId(userId);
-                user.setName(resultSet.getString("name"));
+                user.setUsername(resultSet.getString("name"));
                 user.setEmail(resultSet.getString("email"));
                 user.setCountry(resultSet.getString("country"));
             }
@@ -59,7 +59,7 @@ public class UserDAOImpl implements UserDAO {
             while (resultSet.next()) {
                 User user = new User();
                 user.setId(resultSet.getLong("id"));
-                user.setName(resultSet.getString("name"));
+                user.setUsername(resultSet.getString("name"));
                 user.setEmail(resultSet.getString("email"));
                 user.setCountry(resultSet.getString("country"));
                 users.add(user);
@@ -74,7 +74,7 @@ public class UserDAOImpl implements UserDAO {
     public boolean updateUser(Long userId, User user) throws DBConnectionException {
         boolean isUpdated;
         try (Connection connection = DBConnection.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_USER_BY_ID_SQl)) {
-            preparedStatement.setString(1, user.getName());
+            preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getEmail());
             preparedStatement.setString(3, user.getCountry());
             preparedStatement.setLong(4, userId);
