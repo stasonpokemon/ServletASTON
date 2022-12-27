@@ -1,0 +1,1 @@
+docker run -d --name posgresql_servlets_aston -p 5432:5432 -e POSTGRES_USERNAME=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=servlet_aston postgres
