@@ -2,17 +2,21 @@ package com.aston.app.service.impl;
 
 import com.aston.app.dao.UserDAO;
 import com.aston.app.dao.impl.UserDAOImpl;
+import com.aston.app.dto.PassportDTO;
+import com.aston.app.dto.UserDTO;
 import com.aston.app.exception.DBConnectionException;
 import com.aston.app.pojo.User;
 import com.aston.app.service.UserService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.modelmapper.ModelMapper;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -22,19 +26,20 @@ public class UserServiceImpl implements UserService {
 
     private static final Gson GSON = new GsonBuilder().create();
 
+    private final ModelMapper modelMapper;
 
     public UserServiceImpl() {
         this.userDAO = new UserDAOImpl();
+        this.modelMapper = new ModelMapper();
     }
 
     @Override
     public void findUserById(HttpServletResponse resp, String userIdFromUrl) {
         try {
             Long userId = Long.parseLong(userIdFromUrl);
-            Optional<User> userById;
-            userById = userDAO.findUserById(userId);
+            Optional<User> userById = userDAO.findUserById(userId);
             if (userById.isPresent()) {
-                String userJson = GSON.toJson(userById.get());
+                String userJson = GSON.toJson(userToDTO(userById.get()));
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.setHeader("Content-Type", "application/json");
                 resp.getOutputStream().println(userJson);
@@ -52,9 +57,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void findAllUsers(HttpServletResponse resp) {
-        String usersJson;
         try {
-            usersJson = GSON.toJson(userDAO.findAllUsers());
+            List<UserDTO> usersDTO = userDAO.findAllUsers().stream().map(this::userToDTO).collect(Collectors.toList());
+            String usersJson = GSON.toJson(usersDTO);
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.setHeader("Content-Type", "application/json");
             resp.getOutputStream().println(usersJson);
@@ -73,7 +78,7 @@ public class UserServiceImpl implements UserService {
                 userDAO.saveUser(user);
                 resp.setStatus(HttpServletResponse.SC_CREATED);
                 resp.setHeader("Content-Type", "application/json");
-                resp.getOutputStream().println(GSON.toJson(user));
+                resp.getOutputStream().println(GSON.toJson(userToDTO(user)));
             } else {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
@@ -83,24 +88,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUser(HttpServletRequest req, HttpServletResponse resp) {
+    public void updateUser(HttpServletRequest req, HttpServletResponse resp, String userIdFromUrl) {
         try {
-            String pathInfo = req.getPathInfo();
-            String uri = req.getRequestURI();
-            if (!"/".equals(pathInfo) && pathInfo != null) {
-                Long userId = Long.parseLong(uri.substring("/users/".length()));
-                String userJson = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(Collectors.joining("\n"));
-                User user = GSON.fromJson(userJson, User.class);
-                if (userDAO.updateUser(userId, user)) {
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                    resp.setHeader("Content-Type", "application/json");
-                    resp.getOutputStream().println(GSON.toJson(user));
-                } else {
-                    resp.getOutputStream().println(new StringBuilder("User with id = ").append(userId).append(" not updated").toString());
-                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                }
+            Long userId = Long.parseLong(userIdFromUrl);
+            String userJson = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(Collectors.joining("\n"));
+            User user = GSON.fromJson(userJson, User.class);
+            if (userDAO.updateUser(userId, user)) {
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.setHeader("Content-Type", "application/json");
+                resp.getOutputStream().println(GSON.toJson(userToDTO(user)));
             } else {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getOutputStream().println(new StringBuilder("User with id = ").append(userId).append(" not updated").toString());
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (DBConnectionException | IOException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -110,27 +109,30 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(HttpServletRequest req, HttpServletResponse resp) {
+    public void deleteUser(HttpServletRequest req, HttpServletResponse resp, String userIdFromUrl) {
         try {
-            String pathInfo = req.getPathInfo();
-            String uri = req.getRequestURI();
-            if (!"/".equals(pathInfo) && pathInfo != null) {
-                Long userId = Long.parseLong(uri.substring("/users/".length()));
-                if (userDAO.deleteUser(userId)) {
-                    resp.getOutputStream().println(new StringBuilder("User with id = ").append(userId).append(" was deleted").toString());
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                } else {
-                    resp.getOutputStream().println(new StringBuilder("User with id = ").append(userId).append(" not deleted").toString());
-                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                }
-                resp.setHeader("Content-Type", "application/text");
+            Long userId = Long.parseLong(userIdFromUrl);
+            if (userDAO.deleteUser(userId)) {
+                resp.getOutputStream().println(new StringBuilder("User with id = ").append(userId).append(" was deleted").toString());
+                resp.setStatus(HttpServletResponse.SC_OK);
             } else {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getOutputStream().println(new StringBuilder("User with id = ").append(userId).append(" not deleted").toString());
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             }
+            resp.setHeader("Content-Type", "application/text");
         } catch (DBConnectionException | IOException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (NumberFormatException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
+    }
+
+    private UserDTO userToDTO(User user) {
+        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+        if (user.getPassport() != null) {
+            PassportDTO passportDTO = modelMapper.map(user.getPassport(), PassportDTO.class);
+            userDTO.setPassport(passportDTO);
+        }
+        return userDTO;
     }
 }

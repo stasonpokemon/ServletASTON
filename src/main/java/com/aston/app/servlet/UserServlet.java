@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-//@WebServlet(urlPatterns = {"/users/*"})
 public class UserServlet extends HttpServlet {
 
     private UserService userService;
@@ -29,8 +28,8 @@ public class UserServlet extends HttpServlet {
         if (pathInfo != null) {
             splitPathInfo = pathInfo.split("/");
             if (splitPathInfo.length == 3 && "passport".equals(splitPathInfo[2])) {
-                String s = splitPathInfo[1];
-                passportService.findUsersPassport(resp, s);
+                String userIdFromUrl = splitPathInfo[1];
+                passportService.findUsersPassport(resp, userIdFromUrl);
             } else if ("/".equals(pathInfo)) {
                 userService.findAllUsers(resp);
             } else if (splitPathInfo.length == 2) {
@@ -49,7 +48,7 @@ public class UserServlet extends HttpServlet {
             splitPathInfo = pathInfo.split("/");
             if (splitPathInfo.length == 3 && "passport".equals(splitPathInfo[2])) {
                 passportService.saveUsersPassport(req, resp, splitPathInfo[1]);
-            }else {
+            } else {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
         } else {
@@ -65,17 +64,30 @@ public class UserServlet extends HttpServlet {
             splitPathInfo = pathInfo.split("/");
             if (splitPathInfo.length == 3 && "passport".equals(splitPathInfo[2])) {
                 passportService.updateUsersPassport(req, resp, splitPathInfo[1]);
-            }else {
+            } else if (splitPathInfo.length == 2) {
+                userService.updateUser(req, resp, splitPathInfo[1]);
+            } else {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
         } else {
-            userService.updateUser(req, resp);
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
-        userService.deleteUser(req, resp);
+        String pathInfo = req.getPathInfo();
+        String[] splitPathInfo;
+        if (pathInfo != null) {
+            splitPathInfo = pathInfo.split("/");
+            if (splitPathInfo.length == 2) {
+                userService.deleteUser(req, resp, splitPathInfo[1]);
+            } else {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+        } else {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        }
     }
 
 

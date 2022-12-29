@@ -2,11 +2,13 @@ package com.aston.app.service.impl;
 
 import com.aston.app.dao.PassportDAO;
 import com.aston.app.dao.impl.PassportDAOImpl;
+import com.aston.app.dto.PassportDTO;
 import com.aston.app.exception.DBConnectionException;
 import com.aston.app.pojo.Passport;
 import com.aston.app.service.PassportService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.modelmapper.ModelMapper;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,22 +22,24 @@ public class PassportServiceImpl implements PassportService {
 
     private final PassportDAO passportDAO;
 
+    private final ModelMapper modelMapper;
+
     private static final Gson GSON = new GsonBuilder().create();
 
 
     public PassportServiceImpl() {
         this.passportDAO = new PassportDAOImpl();
+        this.modelMapper = new ModelMapper();
     }
 
     @Override
-    public void findUsersPassport(HttpServletResponse resp, String s) {
+    public void findUsersPassport(HttpServletResponse resp, String userIdFromUrl) {
         try {
-            long userId = Long.parseLong(s);
+            long userId = Long.parseLong(userIdFromUrl);
             Optional<Passport> passport = passportDAO.findPassportByUserId(userId);
             if (passport.isPresent()) {
-                String passportJson = GSON.toJson(passport.get());
                 resp.setHeader("Content-Type", "application/json");
-                resp.getOutputStream().println(passportJson);
+                resp.getOutputStream().println(GSON.toJson(passportToDTO(passport.get())));
                 resp.setStatus(HttpServletResponse.SC_OK);
             } else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -50,14 +54,14 @@ public class PassportServiceImpl implements PassportService {
     }
 
     @Override
-    public void saveUsersPassport(HttpServletRequest req, HttpServletResponse resp, String s) {
+    public void saveUsersPassport(HttpServletRequest req, HttpServletResponse resp, String userIdFromUrl) {
         try {
-            long userId = Long.parseLong(s);
+            long userId = Long.parseLong(userIdFromUrl);
             String passportJson = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(Collectors.joining("\n"));
             Passport passport = GSON.fromJson(passportJson, Passport.class);
             passportDAO.saveByUserId(userId, passport);
             resp.setHeader("Content-Type", "application/json");
-            resp.getOutputStream().println(GSON.toJson(passport));
+            resp.getOutputStream().println(GSON.toJson(passportToDTO(passport)));
             resp.setStatus(HttpServletResponse.SC_OK);
         } catch (DBConnectionException | IOException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -68,16 +72,16 @@ public class PassportServiceImpl implements PassportService {
     }
 
     @Override
-    public void updateUsersPassport(HttpServletRequest req, HttpServletResponse resp, String s) {
+    public void updateUsersPassport(HttpServletRequest req, HttpServletResponse resp, String userIdFromUrl) {
         try {
-            long userId = Long.parseLong(s);
+            long userId = Long.parseLong(userIdFromUrl);
             String passportJson = new BufferedReader(new InputStreamReader(req.getInputStream())).lines().collect(Collectors.joining("\n"));
             Passport passport = GSON.fromJson(passportJson, Passport.class);
-            if (passportDAO.updateByUserId(userId, passport)){
-            resp.setHeader("Content-Type", "application/json");
-            resp.getOutputStream().println(GSON.toJson(passport));
-            resp.setStatus(HttpServletResponse.SC_OK);
-            }else {
+            if (passportDAO.updateByUserId(userId, passport)) {
+                resp.setHeader("Content-Type", "application/json");
+                resp.getOutputStream().println(GSON.toJson(passportToDTO(passport)));
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } else {
                 resp.setHeader("Content-Type", "application/text");
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
@@ -86,6 +90,9 @@ public class PassportServiceImpl implements PassportService {
         } catch (NumberFormatException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
+    }
 
+    private PassportDTO passportToDTO(Passport passport) {
+        return modelMapper.map(passport, PassportDTO.class);
     }
 }
