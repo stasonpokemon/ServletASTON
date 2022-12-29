@@ -1,5 +1,7 @@
-package com.aston.app.dao;
+package com.aston.app.dao.impl;
 
+import com.aston.app.dao.UserDAO;
+import com.aston.app.pojo.Passport;
 import com.aston.app.pojo.User;
 import com.aston.app.exception.DBConnectionException;
 import com.aston.app.util.DBConnection;
@@ -14,10 +16,10 @@ import java.util.Optional;
 
 public class UserDAOImpl implements UserDAO {
 
-    private static final String SAVE_USER_SQl = "INSERT INTO users (name, email) VALUES(?, ?);";
-    private static final String FIND_USER_BY_ID_SQl = "SELECT * FROM users WHERE id = ?;";
-    private static final String FIND_ALL_USERS_SQl = "SELECT * FROM users;";
-    private static final String UPDATE_USER_BY_ID_SQl = "UPDATE users SET name = ?, email = ? WHERE id = ?;";
+    private static final String SAVE_USER_SQl = "INSERT INTO users (username, email) VALUES(?, ?);";
+    private static final String FIND_USER_BY_ID_SQl = "SELECT U.id as u_id, U.username as u_username, U.email as u_email, P.id as p_id, P.name as p_name, P.surname as p_surname, P.patronymic as p_patronymic, P.birthday as p_birthday, P.address as p_address FROM users AS U LEFT JOIN passports AS P ON U.id = P.user_id WHERE U.id = ?;";
+    private static final String FIND_ALL_USERS_SQl = "SELECT U.id as u_id, U.username as u_username, U.email as u_email, P.id as p_id, P.name as p_name, P.surname as p_surname, P.patronymic as p_patronymic, P.birthday as p_birthday, P.address as p_address FROM users AS U LEFT JOIN passports AS P ON U.id = P.user_id;";
+    private static final String UPDATE_USER_BY_ID_SQl = "UPDATE users SET username = ?, email = ? WHERE id = ?;";
     private static final String DELETE_USER_BY_ID_SQl = "DELETE FROM users WHERE id = ?;";
 
     @Override
@@ -40,8 +42,20 @@ public class UserDAOImpl implements UserDAO {
             while (resultSet.next()) {
                 user = new User();
                 user.setId(userId);
-                user.setUsername(resultSet.getString("name"));
-                user.setEmail(resultSet.getString("email"));
+                user.setUsername(resultSet.getString("u_username"));
+                user.setEmail(resultSet.getString("u_email"));
+                long passportId = resultSet.getLong("p_id");
+                Passport passport;
+                if (passportId != 0) {
+                    passport = new Passport();
+                    passport.setId(passportId);
+                    passport.setName(resultSet.getString("p_name"));
+                    passport.setSurname(resultSet.getString("p_surname"));
+                    passport.setPatronymic(resultSet.getString("p_patronymic"));
+                    passport.setBirthday(resultSet.getString("p_birthday"));
+                    passport.setAddress(resultSet.getString("p_address"));
+                    user.setPassport(passport);
+                }
             }
         } catch (SQLException e) {
             throw new DBConnectionException("Connection problems");
@@ -56,9 +70,21 @@ public class UserDAOImpl implements UserDAO {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 User user = new User();
-                user.setId(resultSet.getLong("id"));
-                user.setUsername(resultSet.getString("name"));
-                user.setEmail(resultSet.getString("email"));
+                user.setId(resultSet.getLong("u_id"));
+                user.setUsername(resultSet.getString("u_username"));
+                user.setEmail(resultSet.getString("u_email"));
+                long passportId = resultSet.getLong("p_id");
+                Passport passport;
+                if (passportId != 0) {
+                    passport = new Passport();
+                    passport.setId(passportId);
+                    passport.setName(resultSet.getString("p_name"));
+                    passport.setSurname(resultSet.getString("p_surname"));
+                    passport.setPatronymic(resultSet.getString("p_patronymic"));
+                    passport.setBirthday(resultSet.getString("p_birthday"));
+                    passport.setAddress(resultSet.getString("p_address"));
+                    user.setPassport(passport);
+                }
                 users.add(user);
             }
         } catch (SQLException e) {
@@ -73,7 +99,7 @@ public class UserDAOImpl implements UserDAO {
         try (Connection connection = DBConnection.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_USER_BY_ID_SQl)) {
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getEmail());
-            preparedStatement.setLong(4, userId);
+            preparedStatement.setLong(3, userId);
             isUpdated = preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DBConnectionException("Connection problems");

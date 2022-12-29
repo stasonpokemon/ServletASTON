@@ -1,6 +1,8 @@
 package com.aston.app.servlet;
 
+import com.aston.app.service.PassportService;
 import com.aston.app.service.UserService;
+import com.aston.app.service.impl.PassportServiceImpl;
 import com.aston.app.service.impl.UserServiceImpl;
 
 import javax.servlet.http.HttpServlet;
@@ -12,30 +14,63 @@ public class UserServlet extends HttpServlet {
 
     private UserService userService;
 
+    private PassportService passportService;
+
     @Override
     public void init() {
         userService = new UserServiceImpl();
+        passportService = new PassportServiceImpl();
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         String pathInfo = req.getPathInfo();
-        String uri = req.getRequestURI();
-        if ("/".equals(pathInfo) || pathInfo == null) {
-            userService.findAllUsers(resp);
+        String[] splitPathInfo;
+        if (pathInfo != null) {
+            splitPathInfo = pathInfo.split("/");
+            if (splitPathInfo.length == 3 && "passport".equals(splitPathInfo[2])) {
+                String s = splitPathInfo[1];
+                passportService.findUsersPassport(resp, s);
+            } else if ("/".equals(pathInfo)) {
+                userService.findAllUsers(resp);
+            } else if (splitPathInfo.length == 2) {
+                userService.findUserById(resp, splitPathInfo[1]);
+            }
         } else {
-            userService.findUserById(resp, uri);
+            userService.findAllUsers(resp);
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
-        userService.saveUser(req, resp);
+        String pathInfo = req.getPathInfo();
+        String[] splitPathInfo;
+        if (pathInfo != null) {
+            splitPathInfo = pathInfo.split("/");
+            if (splitPathInfo.length == 3 && "passport".equals(splitPathInfo[2])) {
+                passportService.saveUsersPassport(req, resp, splitPathInfo[1]);
+            }else {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+        } else {
+            userService.saveUser(req, resp);
+        }
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) {
-        userService.updateUser(req, resp);
+        String pathInfo = req.getPathInfo();
+        String[] splitPathInfo;
+        if (pathInfo != null) {
+            splitPathInfo = pathInfo.split("/");
+            if (splitPathInfo.length == 3 && "passport".equals(splitPathInfo[2])) {
+                passportService.updateUsersPassport(req, resp, splitPathInfo[1]);
+            }else {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+        } else {
+            userService.updateUser(req, resp);
+        }
     }
 
     @Override
