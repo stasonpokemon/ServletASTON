@@ -4,8 +4,8 @@ import com.aston.app.dao.UserDAO;
 import com.aston.app.pojo.Passport;
 import com.aston.app.pojo.User;
 import com.aston.app.exception.DBConnectionException;
-import com.aston.app.util.DBConnection;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,6 +16,12 @@ import java.util.Optional;
 
 public class UserDAOImpl implements UserDAO {
 
+    private final DataSource dataSource;
+
+    public UserDAOImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
     private static final String SAVE_USER_SQl = "INSERT INTO users (username, email) VALUES(?, ?);";
     private static final String FIND_USER_BY_ID_SQl = "SELECT U.id as u_id, U.username as u_username, U.email as u_email, P.id as p_id, P.name as p_name, P.surname as p_surname, P.patronymic as p_patronymic, P.birthday as p_birthday, P.address as p_address FROM users AS U LEFT JOIN passports AS P ON U.id = P.user_id WHERE U.id = ?;";
     private static final String FIND_ALL_USERS_SQl = "SELECT U.id as u_id, U.username as u_username, U.email as u_email, P.id as p_id, P.name as p_name, P.surname as p_surname, P.patronymic as p_patronymic, P.birthday as p_birthday, P.address as p_address FROM users AS U LEFT JOIN passports AS P ON U.id = P.user_id;";
@@ -24,7 +30,7 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public void saveUser(User user) throws DBConnectionException {
-        try (Connection connection = DBConnection.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(SAVE_USER_SQl)) {
+        try (Connection connection = dataSource.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(SAVE_USER_SQl)) {
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getEmail());
             preparedStatement.executeUpdate();
@@ -36,7 +42,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public Optional<User> findUserById(Long userId) throws DBConnectionException {
         User user = null;
-        try (Connection connection = DBConnection.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(FIND_USER_BY_ID_SQl)) {
+        try (Connection connection = dataSource.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(FIND_USER_BY_ID_SQl)) {
             preparedStatement.setLong(1, userId);
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
@@ -66,7 +72,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public List<User> findAllUsers() throws DBConnectionException {
         List<User> users = new ArrayList<>();
-        try (Connection connection = DBConnection.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(FIND_ALL_USERS_SQl)) {
+        try (Connection connection = dataSource.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(FIND_ALL_USERS_SQl)) {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 User user = new User();
@@ -96,7 +102,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public boolean updateUser(Long userId, User user) throws DBConnectionException {
         boolean isUpdated;
-        try (Connection connection = DBConnection.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_USER_BY_ID_SQl)) {
+        try (Connection connection = dataSource.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_USER_BY_ID_SQl)) {
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getEmail());
             preparedStatement.setLong(3, userId);
@@ -111,7 +117,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public boolean deleteUser(Long userId) throws DBConnectionException {
         boolean isDeleted;
-        try (Connection connection = DBConnection.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(DELETE_USER_BY_ID_SQl)) {
+        try (Connection connection = dataSource.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(DELETE_USER_BY_ID_SQl)) {
             preparedStatement.setLong(1, userId);
             isDeleted = preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {
