@@ -24,18 +24,8 @@ public class PassportDAOImpl implements PassportDAO {
     }
 
     @Override
-    public void saveByUserId(Long userId, Passport passport) throws DBConnectionException {
-        try (Connection connection = dataSource.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(SAVE_PASSPORT_SQl)) {
-            preparedStatement.setString(1, passport.getName());
-            preparedStatement.setString(2, passport.getSurname());
-            preparedStatement.setString(3, passport.getPatronymic());
-            preparedStatement.setString(4, passport.getBirthday());
-            preparedStatement.setString(5, passport.getAddress());
-            preparedStatement.setLong(6, userId);
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new DBConnectionException("Connection problems");
-        }
+    public boolean saveByUserId(Long userId, Passport passport) throws DBConnectionException {
+        return savePassport(userId, passport, SAVE_PASSPORT_SQl);
     }
 
     @Override
@@ -61,18 +51,22 @@ public class PassportDAOImpl implements PassportDAO {
 
     @Override
     public boolean updateByUserId(Long userId, Passport passport) throws DBConnectionException {
-        boolean isUpdated;
-        try (Connection connection = dataSource.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_PASSPORT_BY_USER_ID_SQl)) {
+        return savePassport(userId, passport, UPDATE_PASSPORT_BY_USER_ID_SQl);
+    }
+
+    private boolean savePassport(Long userId, Passport passport, String save_passport_sQl) throws DBConnectionException {
+        boolean isSaved;
+        try (Connection connection = dataSource.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(save_passport_sQl)) {
             preparedStatement.setString(1, passport.getName());
             preparedStatement.setString(2, passport.getSurname());
             preparedStatement.setString(3, passport.getPatronymic());
             preparedStatement.setString(4, passport.getBirthday());
             preparedStatement.setString(5, passport.getAddress());
             preparedStatement.setLong(6, userId);
-            isUpdated = preparedStatement.executeUpdate() > 0;
+            isSaved = preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DBConnectionException("Connection problems");
         }
-        return isUpdated;
+        return isSaved;
     }
 }

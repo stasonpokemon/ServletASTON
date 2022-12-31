@@ -1,4 +1,4 @@
-package com.aston.app.dto;
+package com.aston.app.pojo.dto;
 
 import lombok.Data;
 

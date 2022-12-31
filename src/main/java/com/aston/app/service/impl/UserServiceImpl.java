@@ -2,8 +2,8 @@ package com.aston.app.service.impl;
 
 import com.aston.app.dao.UserDAO;
 import com.aston.app.dao.impl.UserDAOImpl;
-import com.aston.app.dto.PassportDTO;
-import com.aston.app.dto.UserDTO;
+import com.aston.app.pojo.dto.PassportDTO;
+import com.aston.app.pojo.dto.UserDTO;
 import com.aston.app.exception.DBConnectionException;
 import com.aston.app.pojo.User;
 import com.aston.app.service.UserService;

@@ -1,0 +1,15 @@
+version: '3.9'
+
+services:
+  crud-db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_DB: "servlet_aston"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - .:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"

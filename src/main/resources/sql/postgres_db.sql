@@ -26,6 +26,8 @@ INSERT INTO users(username, email)
 VALUES ('test', 'test');
 INSERT INTO users(username, email)
 VALUES ('test2', 'test2');
+INSERT INTO users(username, email)
+VALUES ('test3', 'test3');
 
 INSERT INTO passports(name, surname, patronymic, birthday, address, user_id)
 VALUES ('Stanislau', 'Trebnikau', 'Andreevich', '13-07-2001', 'Vitebsk', 1);
@@ -33,3 +35,11 @@ INSERT INTO passports(name, surname, patronymic, birthday, address, user_id)
 VALUES ('test', 'test', 'test', '13-07-2001', 'test', 2);
 INSERT INTO passports(name, surname, patronymic, birthday, address, user_id)
 VALUES ('test2', 'test2', 'test2', '13-07-2001', 'test2', 3);
+
+
+truncate table passports restart identity;
+truncate table users restart identity cascade ;
+select * from passports;
+select * from users;
+show max_connections ;
+SELECT count(*) FROM pg_stat_activity;
