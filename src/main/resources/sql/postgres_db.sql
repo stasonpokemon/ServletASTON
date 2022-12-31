@@ -26,6 +26,8 @@ INSERT INTO users(username, email)
 VALUES ('test', 'test');
 INSERT INTO users(username, email)
 VALUES ('test2', 'test2');
+INSERT INTO users(username, email)
+VALUES ('test3', 'test3');
 
 INSERT INTO passports(name, surname, patronymic, birthday, address, user_id)
 VALUES ('Stanislau', 'Trebnikau', 'Andreevich', '13-07-2001', 'Vitebsk', 1);

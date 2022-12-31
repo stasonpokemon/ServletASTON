@@ -89,6 +89,4 @@ public class UserServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
     }
-
-
 }

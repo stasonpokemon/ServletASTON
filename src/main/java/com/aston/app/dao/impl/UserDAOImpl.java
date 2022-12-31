@@ -29,14 +29,16 @@ public class UserDAOImpl implements UserDAO {
     private static final String DELETE_USER_BY_ID_SQl = "DELETE FROM users WHERE id = ?;";
 
     @Override
-    public void saveUser(User user) throws DBConnectionException {
+    public boolean saveUser(User user) throws DBConnectionException {
+        boolean isSaved;
         try (Connection connection = dataSource.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(SAVE_USER_SQl)) {
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getEmail());
-            preparedStatement.executeUpdate();
+            isSaved = preparedStatement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DBConnectionException("Connection problems");
         }
+        return isSaved;
     }
 
     @Override

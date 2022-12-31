@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface PassportDAO {
 
-    void saveByUserId(Long userId, Passport passport) throws DBConnectionException;
+    boolean saveByUserId(Long userId, Passport passport) throws DBConnectionException;
 
     Optional<Passport> findPassportByUserId(Long userId) throws DBConnectionException;
 

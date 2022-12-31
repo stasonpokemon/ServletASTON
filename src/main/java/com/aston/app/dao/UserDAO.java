@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface UserDAO {
 
-    void saveUser(User user) throws DBConnectionException;
+    boolean saveUser(User user) throws DBConnectionException;
 
     Optional<User> findUserById(Long userId) throws DBConnectionException;
 
