@@ -6,10 +6,11 @@ import com.aston.app.pojo.dto.PassportDTO;
 import com.aston.app.exception.DBConnectionException;
 import com.aston.app.pojo.Passport;
 import com.aston.app.service.PassportService;
-import com.aston.app.util.DataSourceConfiguration;
+import com.aston.app.util.HikariCPDataSource;
+import com.aston.app.util.HikariCPDataSourceConfiguration;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariConfig;
 import org.modelmapper.ModelMapper;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,7 +31,8 @@ public class PassportServiceImpl implements PassportService {
 
 
     public PassportServiceImpl() {
-        this.passportDAO = new PassportDAOImpl(new HikariDataSource(DataSourceConfiguration.getInstance().getConfig()));
+        HikariConfig config = HikariCPDataSourceConfiguration.getInstance().getConfig();
+        this.passportDAO = new PassportDAOImpl(HikariCPDataSource.getInstance(config).getDataSource());
         this.modelMapper = new ModelMapper();
     }
 

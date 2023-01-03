@@ -7,10 +7,11 @@ import com.aston.app.pojo.dto.UserDTO;
 import com.aston.app.exception.DBConnectionException;
 import com.aston.app.pojo.User;
 import com.aston.app.service.UserService;
-import com.aston.app.util.DataSourceConfiguration;
+import com.aston.app.util.HikariCPDataSource;
+import com.aston.app.util.HikariCPDataSourceConfiguration;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariConfig;
 import org.modelmapper.ModelMapper;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,7 +32,8 @@ public class UserServiceImpl implements UserService {
     private final ModelMapper modelMapper;
 
     public UserServiceImpl() {
-        this.userDAO = new UserDAOImpl(new HikariDataSource(DataSourceConfiguration.getInstance().getConfig()));
+        HikariConfig config = HikariCPDataSourceConfiguration.getInstance().getConfig();
+        this.userDAO = new UserDAOImpl(HikariCPDataSource.getInstance(config).getDataSource());
         this.modelMapper = new ModelMapper();
     }
 

@@ -4,7 +4,7 @@ import com.aston.app.dao.PassportDAO;
 import com.aston.app.dao.UserDAO;
 import com.aston.app.exception.DBConnectionException;
 import com.aston.app.pojo.Passport;
-import com.aston.app.util.DataSourceConfiguration;
+import com.aston.app.util.PostgreSQLContainerUtil;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.BeforeAll;
@@ -12,70 +12,27 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 
+import static com.aston.app.util.PostgreSQLContainerUtil.BEFORE_SQL;
 import static org.junit.jupiter.api.Assertions.*;
 
 
 @Testcontainers
 public class PassportDAOImplTest {
 
-    public static final String BEFORE_SQL =
-            "truncate table users restart identity cascade;" +
-                    "INSERT INTO users(username, email) " +
-                    "VALUES ('stasonpokemon', 'stasonpokemon@icloud.com'); " +
-                    "INSERT INTO users(username, email) " +
-                    "VALUES ('test', 'test'); " +
-                    "INSERT INTO users(username, email) " +
-                    "VALUES ('test2', 'test2'); " +
-                    "INSERT INTO users(username, email) " +
-                    "VALUES ('test3', 'test3'); " +
-                    "INSERT INTO passports(name, surname, patronymic, birthday, address, user_id) " +
-                    "VALUES ('Stanislau', 'Trebnikau', 'Andreevich', '13-07-2001', 'Vitebsk', 1); " +
-                    "INSERT INTO passports(name, surname, patronymic, birthday, address, user_id) " +
-                    "VALUES ('test', 'test', 'test', '13-07-2001', 'test', 2); " +
-                    "INSERT INTO passports(name, surname, patronymic, birthday, address, user_id) " +
-                    "VALUES ('test2', 'test2', 'test2', '13-07-2001', 'test2', 3);";
-
-    private final static Properties properties;
-
-    /**
-     * Перед стартом тестов получаем properties.
-     *
-     */
-    static {
-        properties = new Properties();
-        try {
-            properties.load(new InputStreamReader(Objects.requireNonNull(DataSourceConfiguration.class.getClassLoader().getResourceAsStream("test_configuration.properties"))));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
     @Container
-    private static final GenericContainer<?> postgresContainer = new PostgreSQLContainer<>(DockerImageName.parse("postgres"))
-            .withDatabaseName(properties.getProperty("db.name"))
-            .withUsername(properties.getProperty("db.username"))
-            .withPassword(properties.getProperty("db.password"))
-            .withInitScript(properties.getProperty("db.init_script"))
-            .withTmpFs(Collections.singletonMap("/var/lib/postgresql/data", "rw"));
+    private static final GenericContainer<?> postgresContainer = PostgreSQLContainerUtil.getInstance();
 
     private static HikariConfig config;
     private final HikariDataSource hikariDataSource = new HikariDataSource(config);
+//            HikariCPDataSource.getInstance(config).getDataSource();
 
     private PassportDAO passportDAO;
     private UserDAO userDAO;
